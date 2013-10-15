@@ -62,12 +62,21 @@
 		return element;
 	}
 	
-	var Present = function( object, options ) {
-		this.container = object;
+	var Present = function( pages, options ) {
+		this.pages = pages;
 		this.options = extend( defaultPresentOptions, options );
+		this.images = [];
 		
 		if( this.options.loadingScreen ) {
 			window.document.body.appendChild( create( this.options.loadingStructure ) );
+			$('link[rel=stylesheet]').each(function(){
+				var path = this.href.split('/');
+				path.pop();
+				path = url.join('/') + '/';
+			});
+			$('img').each(function(){
+				images.push( this.src );
+			})
 		}
 		
 		return this;
