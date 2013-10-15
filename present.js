@@ -32,7 +32,8 @@
 	var defaultPresentOptions = {
 		loadingScreen: true,
 		loadingStructure: defaultLoadingStructure,
-		loadingObject: 'loading_bar',
+		loadingProgressBar: '#loading_bar',
+		loadingContainer: '#loading',
 		paging: true,
 		pageTransitions: 'snap'
 	};
@@ -62,21 +63,88 @@
 		return element;
 	}
 	
+	var unique = function( arr, value ) {
+		for( var key in arr ) {
+			if( arr[key] == value ) return arr;
+		}
+		arr.push( value );
+		return arr;
+	}
+	
+	var extract = function( data, path ) {
+		var matches = data.match(/url\(.+?\)/g);
+		var arr = [];
+		
+		for( var key in matches ) {
+			var url = matches[key].replace( /(^url\(|\)$|['"])/g, '' );
+			
+			if( url.substring( 0, 1 ) != '/' && url.substring( 0, 5 ) != 'http:' && url.substring( 0, 6 ) != 'https:' ) url = path + url;
+				
+			arr = unique( arr, url );
+		}
+		return arr;
+	}
+	
 	var Present = function( pages, options ) {
 		this.pages = pages;
 		this.options = extend( defaultPresentOptions, options );
-		this.images = [];
 		
 		if( this.options.loadingScreen ) {
 			window.document.body.appendChild( create( this.options.loadingStructure ) );
+			
+			var images = [];
+			var path = window.location.href.split('/');
+			path.pop();
+			path = path.join('/') + '/';
+			
 			$('link[rel=stylesheet]').each(function(){
 				var path = this.href.split('/');
 				path.pop();
-				path = url.join('/') + '/';
+				path = path.join('/') + '/';
+				
+				$.ajax({
+					async: false,
+					dataType: 'text',
+					url: this.href,
+					success: function( data ){
+						images = images.concat( extract( data, path ) );
+					}
+				});
+			});
+			$('style').each(function(){
+				images = images.concat( extract( $(this).html(), path ) );
 			});
 			$('img').each(function(){
-				images.push( this.src );
-			})
+				images = unique( images, this.src );
+			});
+			
+			var totalImages = images.length;
+			var loadedImages = 0;
+			
+			var progressBar = $( this.options.loadingProgressBar );
+			var container = $( this.options.loadingContainer );
+			
+			if( totalImages == 0 ) {
+				progressBar.animate({width: '100%'}, function(){
+					container.fadeOut();
+				});	
+			}
+			
+			for( var index in images ) {
+				$('<img>').on('error load', function(){
+					++loadedImages;
+					
+					var percent = (loadedImages/totalImages)*100;
+					progressBar
+						.stop()
+						.animate({
+							width: percent.toString()+'%'
+						}, function() {
+							if( loadedImages == totalImages ) container.fadeOut();
+						}
+					);					
+				}).attr('src', images[index]);
+			}
 		}
 		
 		return this;
