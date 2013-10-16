@@ -6,7 +6,6 @@
 /*
  *	TODO
  * 
- *	Loaders
  *	Paging
  *	Page transitions
  *		Snap
@@ -35,13 +34,10 @@
 		loadingProgressBar: '#loading_bar',
 		loadingContainer: '#loading',
 		paging: true,
-		pageTransitions: 'snap'
+		pageTransitions: 'snap',
+		onpage: function(){},
+		onload: function(){}
 	};
-	
-	var extend = function( a, b ) {
-		for( var key in b ) a[key] = b[key];
-		return a;
-	}
 	
 	var create = function( structure ) {
 		var element = window.document.createDocumentFragment();
@@ -87,7 +83,7 @@
 	
 	var Present = function( pages, options ) {
 		this.pages = pages;
-		this.options = extend( defaultPresentOptions, options );
+		this.options = $.extend( defaultPresentOptions, options );
 		
 		if( this.options.loadingScreen ) {
 			window.document.body.appendChild( create( this.options.loadingStructure ) );
@@ -123,10 +119,12 @@
 			
 			var progressBar = $( this.options.loadingProgressBar );
 			var container = $( this.options.loadingContainer );
+			var done = this.options.onload;
 			
 			if( totalImages == 0 ) {
 				progressBar.animate({width: '100%'}, function(){
 					container.fadeOut();
+					done();
 				});	
 			}
 			
@@ -140,7 +138,10 @@
 						.animate({
 							width: percent.toString()+'%'
 						}, function() {
-							if( loadedImages == totalImages ) container.fadeOut();
+							if( loadedImages == totalImages ) {
+								container.fadeOut();
+								done();
+							}
 						}
 					);					
 				}).attr('src', images[index]);
