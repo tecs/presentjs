@@ -6,9 +6,10 @@
 /*
  *	TODO
  * 
- *	Paging
- *	Page transitions
- *		Snap
+ *	Refactor code		*
+ *	Paging				*
+ *	Page transitions	*
+ *		Snap			*
  *		Deck
  *	Carosuels
  *	Paralax
@@ -81,9 +82,10 @@
 		return arr;
 	}
 	
-	var Present = function( pages, options ) {
-		this.pages = pages;
+	var Present = function( shuttle, options ) {
+		this.shuttle = shuttle;
 		this.options = $.extend( defaultPresentOptions, options );
+		this.moving = false;
 		
 		if( this.options.loadingScreen ) {
 			window.document.body.appendChild( create( this.options.loadingStructure ) );
@@ -146,9 +148,45 @@
 					);					
 				}).attr('src', images[index]);
 			}
+		} else {
+			done();
+		}
+		
+		if( this.options.pageTransitions ) {
+			window.document.body.style.overflow = 'hidden';
+			this.shuttle.css({position: 'relative'});
+			
+			var move = this.goToPage;
+			var that = this;
+			
+			$(window.document).bind('mousewheel DOMMouseScroll', function(event) {
+				event.preventDefault();
+				var direction = event.originalEvent.wheelDelta || -event.originalEvent.detail;
+				move( direction < 0, that )
+			});
 		}
 		
 		return this;
+	}
+	
+	Present.prototype.goToPage = function( page, that ) {
+		if ( that.moving ) return;
+
+		that.moving = true;
+		
+		that.shuttle.animate({
+			top: (-page*100).toString()+'%'
+		}, function(){
+			that.moving = false;
+		});
+	}
+	
+	Present.prototype.goPageUp = function() {
+		
+	}
+	
+	Present.prototype.goPageDown = function() {
+		
 	}
 	
 	$.fn.Present = function( options ) {
