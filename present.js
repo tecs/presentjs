@@ -7,13 +7,24 @@
  *	TODO
  * 
  *	Carosuels
+ *		Slider
+ *		Fader
  *	Paralax
  *	Transformables
- * 	Test in FF/IE/O
+ *	Test in FF/IE/O
+ *	Events
+ *		onpageafter
+ *		onpagebefore
+ *	Helper functions
+ *		getLink
+ *		getScreen
+ *		getCurrentLink
+ *		getCurrentScreen
  */
 	
 (function(window){
 	var $ = window.jQuery;
+	var document = window.document;
 	var instance = false;
 	
 	var getImages = function() {			
@@ -47,10 +58,10 @@
 	}
 	
 	var create = function( structure ) {
-		var element = window.document.createDocumentFragment();
+		var element = document.createDocumentFragment();
 		
 		for( var key in structure ) {
-			var tmp = window.document.createElement( key );
+			var tmp = document.createElement( key );
 			
 			for( var attr in structure[key] ) {
 				if( attr != 'children' ) {
@@ -131,11 +142,11 @@
 	
 	Present.prototype.transitions.snap = {
 		init: function( self ) {
-			window.document.body.style.overflow = 'hidden';
+			document.body.style.overflow = 'hidden';
 			self.shuttle.css({position: 'relative'});
 		},
 		transition: function( page, callback ) {
-			var index = page.index();
+			var index = this.screens.index(page);
 			
 			this.shuttle.animate({
 				top: (-index*100).toString()+'%'
@@ -145,7 +156,7 @@
 	
 	Present.prototype.transitions.deck = {
 		init: function( self ) {
-			window.document.body.style.overflow = 'hidden';
+			document.body.style.overflow = 'hidden';
 			self.shuttle.css({position: 'absolute', top: '0px', left: '0px', width: '100%', height: '100%', zIndex: 0});
 			self.screens.css({position: 'absolute', top: '0px', left: '0px', zIndex: 1});
 		},
@@ -204,7 +215,7 @@
 	
 	Present.prototype.initProgress = function() {
 		var progressScreen = create( this.options.loadingStructure );
-		window.document.body.appendChild( progressScreen );
+		document.body.appendChild( progressScreen );
 		this.progressBar = $( this.options.loadingProgressBar );
 		
 		this.preloadImages();
@@ -291,7 +302,7 @@
 	Present.prototype.bindScroll = function() {
 		var self = this;
 		
-		$(window.document).bind('mousewheel DOMMouseScroll', function(event) {
+		$(document).bind('mousewheel DOMMouseScroll', function(event) {
 			event.preventDefault();
 			var direction = event.originalEvent.wheelDelta || -event.originalEvent.detail;
 			if( direction < 0 ) {
