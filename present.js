@@ -290,6 +290,8 @@
 	Present.prototype.initPaging = function() {
 		var self = this;
 		
+		this.screens.find('a[name]').css({position:'absolute'});
+		
 		this.goToPage( this.currentPage );
 			
 		this.options.pageLinks.click(function() {				
@@ -297,6 +299,12 @@
 			
 			return false;
 		});
+		
+		if ( 'onhashchange' in window ) {
+			window.onhashchange = function() {
+				if( !self.moving ) self.goToPage( window.location.hash );
+			}
+		}
 	}
 	
 	Present.prototype.bindScroll = function() {
