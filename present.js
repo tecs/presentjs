@@ -7,11 +7,10 @@
  *	TODO
  * 
  *	Carosuels
- *		Slider
  *		Fader
  *	Paralax
  *	Transformables
- *	Test in FF/IE/O
+ *	Test in FF/IE/O/S/Mobile
  */
 	
 (function(window){
@@ -56,10 +55,12 @@
 			var tmp = document.createElement( key );
 			
 			for( var attr in structure[key] ) {
-				if( attr != 'children' ) {
-					tmp.setAttribute( attr, structure[key][attr] );
-				} else {
+				if( attr == 'children' ) {
 					tmp.appendChild( create( structure[key][attr] ) );
+				} else if( attr == 'content') {
+					$(tmp).text( structure[key][attr] );
+				} else {
+					tmp.setAttribute( attr, structure[key][attr] );
 				}
 			}
 			
@@ -108,6 +109,10 @@
 			this.initTransitions();
 		}
 		
+		if( this.options.carosuel.length ) {
+			this.initCarosuel();
+		}
+		
 		return this;
 	}
 	
@@ -125,7 +130,10 @@
 		screenClass: 'active',
  
 		scrolling: true,
-
+ 
+		carosuel: [],
+		carosuelDefaultEffect: 'slide',
+ 
 		onpage: function(){},
 		onpagebefore: function(){},
 		onpageafter: function(){},
@@ -157,7 +165,6 @@
 		transition: function( page, callback ) {
 			var self = this;
 			page.css({top: '100%',zIndex: 3});
-						console.log(page)
 			page.animate({
 				top: '0px'
 			}, function(){
@@ -166,6 +173,120 @@
 				
 				callback();
 			});
+		}
+	}
+	
+	Present.prototype.effects = {};
+	
+	Present.prototype.effects.slide = {
+		init: function( config, self ) {
+			config.options = $.extend( this.defaults, config.options );
+			config.effect = this;
+			config.index = 0;
+			
+			config.container.css({overflow: 'hidden'});
+			
+			config.width = config.container.width();
+			config.height = config.container.height();
+			
+			config.shuttle = $(config.container[0].appendChild( document.createElement('div') ));
+			config.elements.each(function(){
+				if( config.pagingStructure ) {
+					config.pagingContainer[0].appendChild( create(config.pagingStructure) );
+					config.paging = config.pagingContainer.children();
+				}
+				
+				config.shuttle[0].appendChild( config.container[0].removeChild( this ));
+				var $this = $(this);
+				
+				if( config.options.direction == 'horizontal' ) {
+					$this.css({float: 'left'});
+				}
+				
+				$this.css({
+					width: config.width,
+					height: config.height
+				});
+			});
+			
+			if( config.options.direction == 'horizontal' ) {
+				config.shuttle.css({
+					height: '100%',
+					width: (100*config.elements.length).toString()+'%'
+				});
+			} else {
+				config.shuttle.css({
+					width: '100%',
+					height: (100*config.elements.length).toString()+'%'
+				});
+			}
+			
+			if( config.paging ) {
+				config.paging.click(function(){	
+					var index = config.paging.index( this );
+					config.effect.transition( index, config, self );
+				});
+			}
+			
+			config.left.click(function(){
+				config.effect.transition( config.index-1, config, self )
+			});
+			config.right.click(function(){
+				config.effect.transition( config.index+1, config, self )
+			});
+			
+			if( config.options.autoplay ) {
+				this.setTimeout( config );
+			}
+			
+			if( config.options.waitOnMouse ) {
+				config.container.mouseover(function(){
+					config.effect.clearTimeout( config );
+				});
+				config.container.mouseout(function(){
+					config.effect.setTimeout( config, self );
+				});
+			}
+		},
+		defaults: {
+			interval: 2000,
+			duration: 500,
+			autoplay: true,
+			waitOnMouse: true,
+			direction: 'horizontal',
+		},
+		transition: function( index, config, self ) {
+			if( config.playing ) return;
+			config.playing = true;
+			
+			this.clearTimeout( config );
+			
+			if( index === false ) index = config.index + 1;
+				
+			if( index < 0 ) index = config.elements.length-1;
+			else if( index >= config.elements.length ) index = 0;
+ 
+			config.index = index;
+ 
+			var animation = config.options.direction == 'horizontal' ? {marginLeft: (-config.width*index).toString()+'px'} : {marginTop: (-config.height*index).toString()+'px'};
+			config.shuttle.animate( animation, config.options.duration, function(){
+				config.playing = false;
+				
+				config.effect.setTimeout( config, self );
+			} );
+		},
+		clearTimeout: function( config ) {
+			if( config.timeout ) {
+				clearTimeout( config.timeout );
+				config.timeout = false;
+			}
+		},
+		setTimeout: function( config, self ) {
+			if( config.options.autoplay ) {
+				config.timeout = setTimeout( function(){
+					config.effect.transition( config.index + 1, config, self );
+				}, config.options.interval );
+			}
 		}
 	}
 	
@@ -304,6 +425,14 @@
 			window.onhashchange = function() {
 				if( !self.moving ) self.goToPage( window.location.hash );
 			}
+		}
+	}
+	
+	Present.prototype.initCarosuel = function() {
+		for( var index in this.options.carosuel ) {
+			var effect = this.options.carosuel[index].effect ? this.options.carosuel[index].effect : this.options.carosuelDefaultEffect;
+			
+			this.effects[ effect ].init( this.options.carosuel[index] , this );
 		}
 	}
 	
