@@ -12,9 +12,6 @@
  *	Paralax
  *	Transformables
  *	Test in FF/IE/O
- *	Events
- *		onpageafter
- *		onpagebefore
  *	Helper functions
  *		getLink
  *		getScreen
@@ -135,6 +132,8 @@
 		scrolling: true,
 
 		onpage: function(){},
+		onpagebefore: function(){},
+		onpageafter: function(){},
 		onload: function(){}
 	};
 	
@@ -182,13 +181,19 @@
 		var index = this.getPageIndex( page );
 		
 		if( index !== false ) {
+			this.onpagebefore();
+			
 			var screen = this.screens.find('a[name='+page.replace('#','')+']').parent();
 			this.moving = true;
 			this.currentPage = page;
+			
 			this.onpage();
+			
 			this.transition( screen, function(){
 				window.location.hash = page;
 				self.moving = false;
+				
+				self.onpageafter();
 			});
 		}
 	}
@@ -338,6 +343,14 @@
 	
 	Present.prototype.onload = function() {
 		this.options.onload();
+	}
+	
+	Present.prototype.onpagebefore = function() {
+		this.options.onpagebefore( this.currentPage );
+	}
+	
+	Present.prototype.onpageafter = function() {
+		this.options.onpageafter( this.currentPage );
 	}
 	
 	$.fn.Present = function( options ) {
