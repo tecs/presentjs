@@ -12,11 +12,6 @@
  *	Paralax
  *	Transformables
  *	Test in FF/IE/O
- *	Helper functions
- *		getLink
- *		getScreen
- *		getCurrentLink
- *		getCurrentScreen
  */
 	
 (function(window){
@@ -125,9 +120,9 @@
 		paging: true,
 		pageTransitions: 'snap',
 		pageLinks: $(),
-		pageLinksActive: 'active',
+		pageLinksClass: 'active',
  
-		screenActive: 'active',
+		screenClass: 'active',
  
 		scrolling: true,
 
@@ -326,15 +321,31 @@
 		});
 	}
 	
+	Present.prototype.getLink = function( page ) {
+		return this.options.pageLinks.filter('[href='+page+'],[href=#'+page+']');
+	}
+	
+	Present.prototype.getCurrentLink = function() {
+		return this.getLink( this.currentPage );
+	}
+	
+	Present.prototype.getScreen = function( page ) {
+		return this.screens.find('a[name='+page.replace('#','')+']').parent();
+	}
+	
+	Present.prototype.getCurrentScreen = function() {
+		return this.getScreen( this.currentPage );
+	}
+	
 	Present.prototype.onpage = function() {
 		if ( this.options.paging ) {
-			if( this.options.pageLinksActive ) {
-				this.options.pageLinks.removeClass( this.options.pageLinksActive );
-				this.options.pageLinks.filter('[href='+this.currentPage+']').addClass( this.options.pageLinksActive );
+			if( this.options.pageLinksClass ) {
+				this.options.pageLinks.removeClass( this.options.pageLinksClass );
+				this.options.pageLinks.filter('[href='+this.currentPage+']').addClass( this.options.pageLinksClass );
 			}
-			if( this.options.screenActive ) {
-				this.screens.removeClass( this.options.screenActive );
-				this.screens.find('a[name='+this.currentPage.replace('#', '')+']').parent().addClass( this.options.screenActive );
+			if( this.options.screenClass ) {
+				this.screens.removeClass( this.options.screenClass );
+				this.screens.find('a[name='+this.currentPage.replace('#', '')+']').parent().addClass( this.options.screenClass );
 			}
 		}
 		
