@@ -189,7 +189,12 @@
 			config.width = config.container.width();
 			config.height = config.container.height();
 			
+			if( !config.elements ) {
+				config.elements = $(config.container).children();
+			}
+			
 			config.shuttle = $(config.container[0].appendChild( document.createElement('div') ));
+			
 			config.elements.each(function(){
 				if( config.pagingStructure ) {
 					config.pagingContainer[0].appendChild( create(config.pagingStructure) );
