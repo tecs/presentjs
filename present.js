@@ -103,7 +103,6 @@
 		this.shuttle = screens.parent();
 		this.options = $.extend( this.options, options );
 		this.moving = false;
-		this.currentPage = window.location.hash;
 		
 		if( this.options.loadingScreen ) {
 			this.initProgress();
@@ -302,7 +301,7 @@
 	}
 	
 	Present.prototype.goToPage = function( page ) {
-		if ( this.moving ) return;
+		if ( this.moving || page == this.currentPage ) return;
 		var self = this;
 
 		var index = this.getPageIndex( page );
@@ -414,8 +413,6 @@
 		this.options.pageLinks.each(function(){
 			var href = this.getAttribute('href');
 			self.pages.push( href );
-			
-			if( self.currentPage == '' ) self.currentPage = href;
 		});
 	}
 	
@@ -424,7 +421,7 @@
 		
 		this.screens.find('a[name]').css({position:'absolute'});
 		
-		this.goToPage( this.currentPage );
+		this.goToPage( window.location.hash != '' ? window.location.hash : this.options.pageLinks.eq(0).attr('href') );
 			
 		this.options.pageLinks.click(function() {				
 			self.goToPage( this.getAttribute('href') );
