@@ -48,7 +48,7 @@
 		return images;
 	}
 	
-	var create = function( structure ) {
+	var create = function( structure, map ) {
 		var element = document.createDocumentFragment();
 		
 		for( var key in structure ) {
@@ -56,9 +56,15 @@
 			
 			for( var attr in structure[key] ) {
 				if( attr == 'children' ) {
-					tmp.appendChild( create( structure[key][attr] ) );
+					tmp.appendChild( create( structure[key][attr], map ) );
 				} else if( attr == 'content') {
-					$(tmp).text( structure[key][attr] );
+					if( map ) {
+						var text = structure[key][attr];
+						for( var magic in map) {
+							text = text.replace(magic, map[magic]);
+						}
+					}
+					$(tmp).text( text );
 				} else {
 					tmp.setAttribute( attr, structure[key][attr] );
 				}
@@ -195,9 +201,9 @@
 			
 			config.shuttle = $(config.container[0].appendChild( document.createElement('div') ));
 			
-			config.elements.each(function(){
+			config.elements.each(function( elementIndex ){
 				if( config.pagingStructure ) {
-					config.pagingContainer[0].appendChild( create(config.pagingStructure) );
+					config.pagingContainer[0].appendChild( create(config.pagingStructure, {NUM: elementIndex + 1 }) );
 					config.paging = config.pagingContainer.children();
 				}
 				
