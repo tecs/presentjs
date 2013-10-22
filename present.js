@@ -373,6 +373,7 @@
 	}
 	
 	Present.prototype.preloadImages = function() {
+		var self = this;
 		var images = getImages();
 			
 		var totalImages = images.length;
