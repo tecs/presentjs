@@ -487,19 +487,19 @@
 			}
 		}
 		
-		this.options.onpage( this.currentPage );
+		this.options.onpage( this.currentPage, this );
 	}
 	
 	Present.prototype.onload = function() {
-		this.options.onload();
+		this.options.onload( this );
 	}
 	
 	Present.prototype.onpagebefore = function() {
-		this.options.onpagebefore( this.currentPage );
+		this.options.onpagebefore( this.currentPage, this );
 	}
 	
 	Present.prototype.onpageafter = function() {
-		this.options.onpageafter( this.currentPage );
+		this.options.onpageafter( this.currentPage, this );
 	}
 	
 	$.fn.Present = function( options ) {
