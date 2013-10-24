@@ -135,6 +135,7 @@
 		screenClass: 'active',
  
 		scrolling: true,
+		fullHeight: true,
  
 		carosuel: [],
 		carosuelDefaultEffect: 'slide',
@@ -152,12 +153,18 @@
 			document.body.style.overflow = 'hidden';
 			self.shuttle.css({position: 'relative'});
 		},
-		transition: function( page, callback ) {
-			var index = this.screens.index(page);
+		transition: function( page, callback, self ) {
+			var animation = {};
 			
-			this.shuttle.animate({
-				top: (-index*100).toString()+'%'
-			}, callback );
+			if( self.options.fullHeight ) {
+				var index = this.screens.index(page);
+				animation.top = (-index*100).toString()+'%';
+			} else {
+				var offset = page.offset().top;
+				animation.top = (offset > 0 ? '-' : '+' ) + '=' + Math.abs( offset ).toString() + 'px';
+			}
+			
+			this.shuttle.animate( animation, callback );
 		}
 	}
 	
@@ -320,7 +327,7 @@
 				self.moving = false;
 				
 				self.onpageafter();
-			});
+			}, self );
 		}
 	}
 	
@@ -451,10 +458,39 @@
 		$(document).bind('mousewheel DOMMouseScroll', function(event) {
 			event.preventDefault();
 			var direction = event.originalEvent.wheelDelta || -event.originalEvent.detail;
-			if( direction < 0 ) {
-				self.goPageDown();
+			
+			
+			var page = self.getCurrentScreen();
+			
+			if(
+				!self.options.fullHeight && (
+				( direction < 0 && page.offset().top + page.height() > $(document.body).height() ) || 
+				( direction > 0 && page.offset().top != 0 )) 
+			) {
+				if( self.moving ) {
+					return false;
+				}
+				self.moving = true;
+				
+				direction = Math.round( ( direction/Math.abs(direction) ) * $(document.body).height() * 0.75 );
+				
+				if( page.offset().top + direction > 0 ) {
+					direction = -page.offset().top;
+				} else if( page.height() + page.offset().top + direction < $(document.body).height() ) {
+					direction = $(document.body).height() - (page.height() + page.offset().top);
+				}
+				
+				self.shuttle.animate({
+					top: (direction < 0 ? '-' : '+' ) + '=' + Math.abs( direction ).toString() + 'px'
+				}, function(){
+					self.moving = false;
+				});
 			} else {
-				self.goPageUp();
+				if( direction < 0 ) {
+					self.goPageDown();
+				} else {
+					self.goPageUp();
+				}
 			}
 		});
 	}
