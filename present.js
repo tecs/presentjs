@@ -6,6 +6,8 @@
 /*
  *	TODO
  * 
+ *	Adaptive triggers based on screen size
+ * 	Move in-screen scrolling to slide transition
  *	Carosuels
  *		Fader
  *	Paralax
@@ -52,7 +54,7 @@
 		var element = document.createDocumentFragment();
 		
 		for( var key in structure ) {
-			var tmp = document.createElement( key );
+			var tmp = document.createElement( structure[key].tag );
 			
 			for( var attr in structure[key] ) {
 				if( attr == 'children' ) {
@@ -65,7 +67,7 @@
 						}
 					}
 					$(tmp).text( text );
-				} else {
+				} else if( attr != 'tag' ) {
 					tmp.setAttribute( attr, structure[key][attr] );
 				}
 			}
@@ -123,7 +125,7 @@
 	
 	Present.prototype.options = {
 		loadingScreen: true,
-		loadingStructure: {div:{id:'loading',children:{div:{id:'loading_bar'}}}},
+		loadingStructure: [{tag:'div',id:'loading',children:[{tag:'div',id:'loading_bar'}]}],
 		loadingProgressBar: '#loading_bar',
 		loadingContainer: '#loading',
  
@@ -143,7 +145,8 @@
 		onpage: function(){},
 		onpagebefore: function(){},
 		onpageafter: function(){},
-		onload: function(){}
+		onload: function(){},
+		onimage: function(){}
 	};
 	
 	Present.prototype.transitions = {};
@@ -393,8 +396,8 @@
 		for( var index in images ) {
 			$('<img>').on('error load', function(){
 				++loadedImages;
-					
-				self.setProgress( loadedImages/totalImages );
+				
+				self.onimage( loadedImages/totalImages, this.src );
 			}).attr('src', images[index]);
 		}
 	}
@@ -431,10 +434,12 @@
 		
 		this.goToPage( window.location.hash != '' ? window.location.hash : this.options.pageLinks.eq(0).attr('href') );
 			
-		this.options.pageLinks.click(function() {				
-			self.goToPage( this.getAttribute('href') );
+		$('a').click(function() {				
+			if( this.getAttribute('href').substring(0, 1) == '#' ) {
+				self.goToPage( this.getAttribute('href') );
 			
-			return false;
+				return false;
+			}
 		});
 		
 		if ( 'onhashchange' in window ) {
@@ -536,6 +541,10 @@
 	
 	Present.prototype.onpageafter = function() {
 		this.options.onpageafter( this.currentPage, this );
+	}
+	Present.prototype.onimage = function( percent, image ) {
+		this.setProgress( percent );
+		this.options.onimage( percent, image, this );
 	}
 	
 	$.fn.Present = function( options ) {
