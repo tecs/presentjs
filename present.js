@@ -125,6 +125,7 @@
 	
 	Present.prototype.options = {
 		loadingScreen: true,
+		loadingType: 'fade',
 		loadingStructure: [{tag:'div',id:'loading',children:[{tag:'div',id:'loading_bar'}]}],
 		loadingProgressBar: '#loading_bar',
 		loadingContainer: '#loading',
@@ -133,10 +134,13 @@
 		pageTransitions: 'snap',
 		pageLinks: $(),
 		pageLinksClass: 'active',
+		pageArrows: true,
+		pageArrowsAction: 'scroll',
  
 		screenClass: 'active',
  
 		scrolling: true,
+		scrollTime: 200,
 		fullHeight: true,
  
 		carosuel: [],
@@ -363,8 +367,18 @@
 	}
 	
 	Present.prototype.hideProgress = function() {
-		$( this.options.loadingContainer ).fadeOut();
-		this.onload();
+		var self = this;
+		if( this.options.loadingType == 'fade' ) {
+			$( this.options.loadingContainer ).fadeOut();
+			this.onload();
+		}
+		else {
+			this.shuttle.css({ top: $('body').height().toString() + 'px' }).animate({top: '0px'});
+			$( this.options.loadingContainer ).animate({top: '-' + $('body').height().toString() + 'px'}, function(){
+				self.onload();
+			});
+		}
+		
 	}
 	
 	Present.prototype.setProgress = function( progress ) {
@@ -431,8 +445,6 @@
 		var self = this;
 		
 		this.screens.find('a[name]').css({position:'absolute'});
-		
-		this.goToPage( window.location.hash != '' ? window.location.hash : this.options.pageLinks.eq(0).attr('href') );
 			
 		$('a').click(function() {				
 			if( this.getAttribute('href').substring(0, 1) == '#' ) {
@@ -447,6 +459,25 @@
 				if( !self.moving ) self.goToPage( window.location.hash );
 			}
 		}
+		
+		if( this.options.pageArrows ) {
+			$(document).keydown(function(e) {
+				switch(e.which) {
+					case 38:
+						if(self.options.pageArrowsAction=='page') self.goPageUp();
+						else $(document).trigger('mousewheel', 1);
+					break;
+
+					case 40:
+						if(self.options.pageArrowsAction=='page') self.goPageDown();
+						else $(document).trigger('mousewheel', -1);
+					break;
+
+					default: return;
+				}
+				e.preventDefault();
+			});
+		}
 	}
 	
 	Present.prototype.initCarosuel = function() {
@@ -460,9 +491,9 @@
 	Present.prototype.bindScroll = function() {
 		var self = this;
 		
-		$(document).bind('mousewheel DOMMouseScroll', function(event) {
+		$(document).bind('mousewheel DOMMouseScroll', function(event, custom) {
 			event.preventDefault();
-			var direction = event.originalEvent.wheelDelta || -event.originalEvent.detail;
+			var direction = custom || event.originalEvent.wheelDelta || -event.originalEvent.detail;
 			
 			
 			var page = self.getCurrentScreen();
@@ -487,7 +518,7 @@
 				
 				self.shuttle.animate({
 					top: (direction < 0 ? '-' : '+' ) + '=' + Math.abs( direction ).toString() + 'px'
-				}, function(){
+				}, self.options.scrollTime ,function(){
 					self.moving = false;
 				});
 			} else {
@@ -532,6 +563,7 @@
 	}
 	
 	Present.prototype.onload = function() {
+		if( this.options.paging ) this.goToPage( window.location.hash != '' ? window.location.hash : this.options.pageLinks.eq(0).attr('href') );
 		this.options.onload( this );
 	}
 	
