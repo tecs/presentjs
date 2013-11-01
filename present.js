@@ -12,6 +12,7 @@
  *		Fader
  *	Paralax
  *	Transformables
+ *	Scroll on swipe
  *	Test in FF/IE/O/S/Mobile
  */
 	
