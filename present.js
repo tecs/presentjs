@@ -2,19 +2,6 @@
  * Copyright 2013 Alexander Ivanov
  * Licensed under the MIT License
  */
-
-/*
- *	TODO
- * 
- *	Adaptive triggers based on screen size
- * 	Move in-screen scrolling to slide transition
- *	Carosuels
- *		Fader
- *	Paralax
- *	Transformables
- *	Scroll on swipe
- *	Test in FF/IE/O/S/Mobile
- */
 	
 (function(window){
 	var $ = window.jQuery;
@@ -52,31 +39,18 @@
 	}
 	
 	var create = function( structure, map ) {
-		var element = document.createDocumentFragment();
-		
-		for( var key in structure ) {
-			var tmp = document.createElement( structure[key].tag );
-			
-			for( var attr in structure[key] ) {
-				if( attr == 'children' ) {
-					tmp.appendChild( create( structure[key][attr], map ) );
-				} else if( attr == 'content') {
-					if( map ) {
-						var text = structure[key][attr];
-						for( var magic in map) {
-							text = text.replace(magic, map[magic]);
-						}
-					}
-					$(tmp).text( text );
-				} else if( attr != 'tag' ) {
-					tmp.setAttribute( attr, structure[key][attr] );
-				}
-			}
-			
-			element.appendChild( tmp );
+		for( var magic in map) {
+			structure = structure.replace(magic, map[magic]);
 		}
+				
+		structure = $.parseHTML(structure);
 		
-		return element;
+		var fragment = document.createDocumentFragment();
+		$(structure).each(function(){
+			fragment.appendChild(this);
+		});
+		
+		return fragment;
 	}
 	
 	var unique = function( arr, value ) {
@@ -127,7 +101,7 @@
 	Present.prototype.options = {
 		loadingScreen: true,
 		loadingType: 'fade',
-		loadingStructure: [{tag:'div',id:'loading',children:[{tag:'div',id:'loading_bar'}]}],
+		loadingStructure: '<div id="loading"><div id="loading_bar"></div></div>',
 		loadingProgressBar: '#loading_bar',
 		loadingContainer: '#loading',
  
@@ -141,7 +115,8 @@
 		screenClass: 'active',
  
 		scrolling: true,
-		scrollTime: 200,
+		scrollTime: 100,
+		scrollLength: 300,
 		fullHeight: true,
  
 		carosuel: [],
@@ -377,6 +352,7 @@
 			this.shuttle.css({ top: $('body').height().toString() + 'px' }).animate({top: '0px'});
 			$( this.options.loadingContainer ).animate({top: '-' + $('body').height().toString() + 'px'}, function(){
 				self.onload();
+				this.style.display = 'none';
 			});
 		}
 		
@@ -509,7 +485,7 @@
 				}
 				self.moving = true;
 				
-				direction = Math.round( ( direction/Math.abs(direction) ) * $(document.body).height() * 0.75 );
+				direction = Math.round( ( direction/Math.abs(direction) ) *  self.options.scrollLength );
 				
 				if( page.offset().top + direction > 0 ) {
 					direction = -page.offset().top;
