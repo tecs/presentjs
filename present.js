@@ -468,7 +468,7 @@
 	Present.prototype.bindScroll = function() {
 		var self = this;
 		
-		$(document).bind('mousewheel DOMMouseScroll', function(event, custom) {
+		$(document).swipeEvents().bind('mousewheel DOMMouseScroll swipeDown swipeUp', function(event, custom) {
 			event.preventDefault();
 			var direction = custom || event.originalEvent.wheelDelta || -event.originalEvent.detail;
 			
@@ -555,6 +555,49 @@
 		this.setProgress( percent );
 		this.options.onimage( percent, image, this );
 	}
+	
+	$.fn.swipeEvents = function() {
+		return this.each(function() {
+			var startX,
+				startY,
+				$this = $(this);
+
+			$this.bind('touchstart', function( event ) {
+				var touches = event.originalEvent.touches;
+				if (touches && touches.length) {
+					startX = touches[0].pageX;
+					startY = touches[0].pageY;
+					$this.bind('touchmove', touchmove);
+				}
+			});
+
+			var touchmove = function( event ) {
+				var touches = event.originalEvent.touches;
+				if (touches && touches.length) {
+					var deltaX = startX - touches[0].pageX;
+					var deltaY = startY - touches[0].pageY;
+					
+					if (deltaX >= 50) {
+						$this.trigger("swipeLeft", -1);
+					} else if (deltaX <= -50) {
+						$this.trigger("swipeRight", 1);
+					}
+					
+					if (deltaY >= 50) {
+						$this.trigger("swipeUp", -1);
+					} else if (deltaY <= -50) {
+						$this.trigger("swipeDown", 1);
+					}
+					
+					if (Math.abs(deltaX) >= 50 || Math.abs(deltaY) >= 50) {
+						$this.unbind('touchmove', touchmove);
+					}
+					
+					event.preventDefault();
+				}
+			}
+		});
+	};
 	
 	$.fn.Present = function( options ) {
 		if( instance && window.console ) {
