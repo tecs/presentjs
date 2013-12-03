@@ -229,11 +229,17 @@
 			}
 			
 			config.left.click(function(){
-				config.effect.transition( config.index-1, config, self )
+				config.effect.transition( config.index-1, config, self );
 			});
 			config.right.click(function(){
-				config.effect.transition( config.index+1, config, self )
+				config.effect.transition( config.index+1, config, self );
 			});
+			
+			if( config.carosuelSwipe ) {
+				config.container.swipeEvents().bind('swipeLeft swipeRight',function(event, direction ){
+					config.effect.transition( config.index-direction, config, self );
+				});
+			}
 			
 			if( config.options.autoplay ) {
 				this.setTimeout( config );
